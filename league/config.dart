@@ -22,8 +22,6 @@ Future<Config?> parseFromFile(String filepath) async {
       return null;
     }
 
-    print(parts);
-
     var scheme = parts[4];
     var port = int.parse(parts[2]);
     var password = parts[3];

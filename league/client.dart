@@ -29,7 +29,7 @@ class Client {
     }
   }
 
-  Future<int?> getChampSelectCurrentChampionId() async {
+  Future<int?> getCurrentChampionId() async {
     var uri = _formatUri('lol-champ-select/v1/current-champion');
 
     var req = await httpClient.getUrl(uri);
@@ -50,11 +50,47 @@ class Client {
       champtionid = int.tryParse(contents);
     }
 
-    return  Future(() => champtionid);
+    return Future(() => champtionid);
+  }
+
+  Future<void> rerollCurrentChampion() async {
+    var req =
+        await _createRequest('lol-champ-select/v1/session/my-selection/reroll');
+
+    var res = await req.close();
+
+    if (res.statusCode < 200 || res.statusCode > 299) {
+      print('bad response');
+      return;
+    }
+  }
+
+  Future<void> benchSwap(int championId) async {
+    var req = await _createRequest(
+        'lol-champ-select/v1/session/bench/swap/$championId');
+
+    var res = await req.close();
+
+    if (res.statusCode < 200 || res.statusCode > 299) {
+      print('bad response');
+      return;
+    }
+
+    return;
   }
 
   void close() {
     httpClient.close();
+  }
+
+  Future<HttpClientRequest> _createRequest(String path) async {
+    var uri = _formatUri(path);
+
+    var req = await httpClient.getUrl(uri);
+    req.headers.contentType = ContentType.json;
+    req.headers.set('Authorization', 'Basic: ${_auth()}');
+
+    return Future(() => req);
   }
 
   Uri _formatUri(String path) {

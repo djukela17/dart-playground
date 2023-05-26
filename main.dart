@@ -1,5 +1,6 @@
 import 'league/client.dart';
 import 'league/config.dart';
+import 'league/service.dart';
 
 void main() async {
   var config = await parseFromFile('lockfile');
@@ -7,20 +8,7 @@ void main() async {
     return;
   }
 
-  var leagueClient = Client(config);
+  var leagueService = Service(config);
 
-  await run(leagueClient);
-
-  leagueClient.close();
-}
-
-Future<void> run(Client leagueClient) async {
-  var championId = await leagueClient.getChampSelectCurrentChampionId();
-  if (championId == null) {
-    print('not good champion id');
-
-    return;
-  }
-
-  print('current champion id: $championId');
+  await leagueService.rerollAndKeep();
 }
