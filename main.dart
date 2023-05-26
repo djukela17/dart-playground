@@ -1,4 +1,3 @@
-import 'league/client.dart';
 import 'league/config.dart';
 import 'league/service.dart';
 
