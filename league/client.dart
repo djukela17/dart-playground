@@ -1,7 +1,9 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:http/io_client.dart';
 
 import 'config.dart';
+import 'package:http/http.dart' as http;
 
 class Client {
   Config config;
@@ -13,6 +15,14 @@ class Client {
 
   Future<void> getCurrentSummoner() async {
     var uri = _formatUri('lol-summoner/v1/current-summoner');
+
+    http.get(
+      uri,
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': 'Basic ${_auth()}',
+      },
+    );
 
     var req = await httpClient.getUrl(uri);
     req.headers.contentType = ContentType.json;
@@ -83,30 +93,49 @@ class Client {
 
   Future<void> setChallengeTokens() async {
     var body = '{"challengeIds":[]}';
-    var req = await _createPostRequest(
-        'lol-challenges/v1/update-player-preferences/', body);
+    // var req = await _createPostRequest(
+    //     'lol-challenges/v1/update-player-preferences/', body);
+    //
+    // var res = await req.close();
 
-    var res = await req.close();
+    var c = IOClient(httpClient);
 
-    if (res.statusCode < 200 || res.statusCode > 299) {
-      print('bad response');
-      print(res.statusCode);
+    var r = await c.post(
+        Uri(
+          scheme: config.scheme,
+          host: config.host,
+          port: config.port,
+          path: 'lol-challenges/v1/update-player-preferences/',
+        ),
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Basic ${_auth()}',
+        },
+        body: utf8.encode(body));
 
-      var body = await res.transform(Utf8Decoder()).join();
-    print(body);
+    print(r.statusCode);
+    print(r.body);
 
-      // await for (var contents in res.transform(Utf8Decoder())) {
-      //   print('foo');
-      //
-      //   print(contents);
-      // }
-
-      print('here');
-
-      return;
-    }
-
-    print("set challenge tokens success");
+    //
+    // if (res.statusCode < 200 || res.statusCode > 299) {
+    //   print('bad response');
+    //   print(res.statusCode);
+    //
+    //   var body = await res.transform(Utf8Decoder()).join();
+    //   print(body);
+    //
+    //   // await for (var contents in res.transform(Utf8Decoder())) {
+    //   //   print('foo');
+    //   //
+    //   //   print(contents);
+    //   // }
+    //
+    //   print('here');
+    //
+    //   return;
+    // }
+    //
+    // print("set challenge tokens success");
   }
 
   void close() {
@@ -123,8 +152,7 @@ class Client {
     return Future(() => req);
   }
 
-  Future<HttpClientRequest> _createPostRequest(
-      String path, String body) async {
+  Future<HttpClientRequest> _createPostRequest(String path, String body) async {
     var uri = _formatUri(path);
 
     var req = await httpClient.postUrl(uri);
