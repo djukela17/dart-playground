@@ -11,17 +11,20 @@ class Client {
 
   Client(this.config);
 
-  void getCurrentSummoner() async {
-    var uri = _formatUri('lol-summoner/v1/get-current-summoner');
+  Future<void> getCurrentSummoner() async {
+    var uri = _formatUri('lol-summoner/v1/current-summoner');
 
     var req = await httpClient.getUrl(uri);
     req.headers.contentType = ContentType.json;
-    req.headers.set('Authorization', 'Basic: ${_auth()}');
+    req.headers.set('Authorization', 'Basic ${_auth()}');
+
+    print(req.headers);
 
     var res = await req.close();
 
     if (res.statusCode < 200 || res.statusCode > 299) {
-      return;
+      print('bad response');
+      print(res.statusCode);
     }
 
     await for (var contents in res.transform(Utf8Decoder())) {
@@ -73,10 +76,37 @@ class Client {
 
     if (res.statusCode < 200 || res.statusCode > 299) {
       print('bad response');
+
+      return;
+    }
+  }
+
+  Future<void> setChallengeTokens() async {
+    var body = '{"challengeIds":[]}';
+    var req = await _createPostRequest(
+        'lol-challenges/v1/update-player-preferences/', body);
+
+    var res = await req.close();
+
+    if (res.statusCode < 200 || res.statusCode > 299) {
+      print('bad response');
+      print(res.statusCode);
+
+      var body = await res.transform(Utf8Decoder()).join();
+    print(body);
+
+      // await for (var contents in res.transform(Utf8Decoder())) {
+      //   print('foo');
+      //
+      //   print(contents);
+      // }
+
+      print('here');
+
       return;
     }
 
-    return;
+    print("set challenge tokens success");
   }
 
   void close() {
@@ -87,8 +117,22 @@ class Client {
     var uri = _formatUri(path);
 
     var req = await httpClient.getUrl(uri);
-    req.headers.contentType = ContentType.json;
     req.headers.set('Authorization', 'Basic: ${_auth()}');
+    req.headers.contentType = ContentType.json;
+
+    return Future(() => req);
+  }
+
+  Future<HttpClientRequest> _createPostRequest(
+      String path, String body) async {
+    var uri = _formatUri(path);
+
+    var req = await httpClient.postUrl(uri);
+    req.headers.set('Authorization', 'Basic: ${_auth()}');
+    req.headers.contentType = ContentType.json;
+    req.headers.contentLength = body.length;
+
+    req.write(body);
 
     return Future(() => req);
   }
